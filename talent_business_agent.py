@@ -788,10 +788,54 @@ def create_agent(groq_api_key):
 
 
 def run_agent(client, user_message, max_iterations=5, conversation_history=None):
-   messages = [
-    {"role": "system", "content": FULL_SYSTEM_PROMPT}
-]
 
+    messages = [
+        {"role": "system", "content": FULL_SYSTEM_PROMPT}
+    ]
+
+    if conversation_history:
+        messages.extend(conversation_history)
+
+    messages.append({
+        "role": "user",
+        "content": user_message
+    })
+
+    for iteration in range(max_iterations):
+
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            temperature=0
+        )
+
+        assistant_message = response.choices[0].message
+        messages.append(assistant_message)
+
+        if not assistant_message.tool_calls:
+            return {
+                "answer": assistant_message.content,
+                "iterations": iteration + 1,
+                "messages": messages
+            }
+
+        for tool_call in assistant_message.tool_calls:
+            result = execute_tool_call(tool_call)
+
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "name": tool_call.function.name,
+                "content": result
+            })
+
+    return {
+        "answer": "The agent reached its tool-call limit.",
+        "iterations": max_iterations,
+        "messages": messages
+    }
 if conversation_history:
     messages.extend(conversation_history)
 
