@@ -41,12 +41,17 @@ if user_message:
 
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            response = agent.run_agent(
-                client,
-                user_message
-            )
+           result = agent.run_agent(
+    client,
+    user_message
+)
 
-            st.markdown(response)
+if isinstance(result, dict):
+    response = result.get("answer", str(result))
+else:
+    response = result
+
+st.markdown(response)
 
     st.session_state.messages.append({
         "role": "assistant",
