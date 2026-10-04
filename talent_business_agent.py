@@ -787,11 +787,18 @@ def create_agent(groq_api_key):
     return Groq(api_key=groq_api_key)
 
 
-def run_agent(client, user_message, max_iterations=5):
-    messages = [
-        {"role": "system", "content": FULL_SYSTEM_PROMPT},
-        {"role": "user", "content": user_message}
-    ]
+def run_agent(client, user_message, max_iterations=5, conversation_history=None):
+   messages = [
+    {"role": "system", "content": FULL_SYSTEM_PROMPT}
+]
+
+if conversation_history:
+    messages.extend(conversation_history)
+
+messages.append({
+    "role": "user",
+    "content": user_message
+})
 
     for iteration in range(max_iterations):
 
